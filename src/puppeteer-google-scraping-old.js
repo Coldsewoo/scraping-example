@@ -1,19 +1,11 @@
-const qs = require('querystring')
-const puppeteer = require('puppeteer')
-const request = require('request')
-const fs = require('fs')
-const path = require('path')
+const puppeteer = require("puppeteer")
+const fs = require("fs")
+const qs = require("querystring")
+const request = require("request")
+const path = require("path")
 
-if(process.argv.length < 3) return console.log("No search param given")
-const queryString = process.argv.slice(2).join(" ")
-
-
-/**
- *  @param {Number} t : sleep time (ms)
- *  Pause given amount of the time before moving on next line
- */
-const sleep = async(t) => new Promise((r,j) => setTimeout(() => r(), t))
-
+if (process.argv.length < 3) return console.log("No search params given")
+const queryString = process.argv.slice(2).join(" ");
 
 /**
  *  @param {String} queryString : Search parameter
@@ -25,35 +17,52 @@ const search = async queryString => {
   console.log("Starting...")
   await page.goto(`https://www.google.com/search?q=${qs.escape(queryString)}&tbm=isch`)
 
-  for(let i=0; i<10;) {
-    await page.keyboard.press("End")
-    i += 1
-    await sleep(500)
+  var count = 0;
+
+  var keyDown = setInterval(async () => {
+    console.log(count)
+    await page.keyboard.press('ArrowDown')
+    count += 1
+    if (count === 30) {
+      clearInterval(keyDown)
+    }
     try {
-      await page.click("#smb")
-      for (let j=0;j<20;) {
-        await page.keyboard.press("End")
-        j += 1
-        await sleep(500)
-      }
-      const selector = '.rg_meta'
-      const links = await page.evaluate(selector => {
-        const anchors = Array.from(document.querySelectorAll(selector))
-        return anchors.map(anchor => {
-          return JSON.parse(anchor.textContent)
-        })
-      }, selector)
-      setTimeout(() => browser.close(), 50000)
-      console.log("Fetched All URLs")
-      saveImage(links)
-    }catch(err) {
-      for(let k=0;k<10;) {
-        await page.keyboard.press("End")
-        k += 1
-        await sleep(300)
+      await page.click('#smb')
+      var countKey = 0
+      var keyDownTry = setInterval(async () => {
+        await page.keyboard.press('ArrowDown')
+        countKey += 1
+        console.log(countKey)
+        if (countKey === 50) {
+          clearInterval(keyDownTry)
+          const selector = '.rg_meta'
+          const links = await page.evaluate(selector => {
+            const anchors = Array.from(document.querySelectorAll(selector))
+            console.log("url doone")
+            return anchors.map(anchor => {
+              return JSON.parse(anchor.textContent)
+            })
+          }, selector)
+          setTimeout(() => {
+            browser.close()
+          }, 20000)
+          saveImage(links)
+          // console.log(links.map(e => e.ou))
+        }
+      }, 300)
+    } catch (err) {
+      var countCatch = 0
+      var keyDownCatch = setInterval(async () => {
+        await page.keyboard.press('ArrowDown')
+        countCatch += 1
+        if (countCatch === 10) clearInterval(keyDownCatch)
+      }, 300)
+    } finally {
+      if (count === 30) {
+        clearInterval(keyDown)
       }
     }
-  }
+  }, 300)
 }
 
 
@@ -69,6 +78,7 @@ const saveImage = links => {
     fs.mkdirSync(folderPath)
   }
   console.log(`Images amount : ${urls.length}`)
+
   var interval = setInterval(() => {
     try {
       const url = urls.shift();
@@ -109,5 +119,6 @@ const saveImage = links => {
 }
 
 search(queryString)
+
 
 
