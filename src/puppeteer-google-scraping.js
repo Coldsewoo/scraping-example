@@ -10,7 +10,7 @@ const queryString = process.argv.slice(2).join(" ")
 
 /**
  *  @param {Number} t : sleep time (ms)
- *  Pause given amount of the time before moving on next line
+ *  Pause given amount of the time before moving on to next line
  */
 const sleep = async(t) => new Promise((r,j) => setTimeout(() => r(), t))
 
@@ -31,7 +31,8 @@ const search = async queryString => {
     await sleep(500)
     try {
       await page.click("#smb")
-      for (let j=0;j<20;) {
+      i = 10
+      for (let j=0;j<30;) {
         await page.keyboard.press("End")
         j += 1
         await sleep(500)
@@ -62,7 +63,7 @@ const search = async queryString => {
  *  Filter out image urls from search result and save them to given folder
  */
 const saveImage = links => {
-  const folderPath = path.join('/Users/Beomgyo/googleScraping', queryString)
+  const folderPath = path.join('/Path/to/Folder', queryString)
   const regex = /\.(jpe?g|png|tif?f|bmp)/i
   const urls = links.map(e => e.ou).filter(e => regex.exec(e))
   if (!fs.existsSync(folderPath)) {
